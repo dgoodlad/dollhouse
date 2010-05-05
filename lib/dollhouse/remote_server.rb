@@ -5,6 +5,7 @@ require 'tempfile'
 module Dollhouse
   class RemoteServer
     include Dollhouse::Tasks::Babushka
+    include Dollhouse::Tasks::Bootstrap
 
     attr_reader :ssh
 
@@ -36,7 +37,7 @@ module Dollhouse
       
       @ssh.exec!("(#{command}) && echo SUCCESS || echo FAILURE $?") do |ch, stream, data|
         if stream == :stderr
-          output << "ERR: #{data}"
+          puts "ERR: #{data}"
         else # stdout
           output << data
         end
@@ -55,6 +56,10 @@ module Dollhouse
     
     def get_environment(var)
       @ssh.exec!("echo $#{var}").strip
+    end
+
+    def connected_as_root?
+      @ssh.exec!("id") =~ /^uid=0\(root\)/
     end
   end    
 end
