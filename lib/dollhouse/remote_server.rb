@@ -6,6 +6,7 @@ module Dollhouse
   class RemoteServer
     include Net::SSH::Prompt
 
+    include Dollhouse::Tasks::Apt
     include Dollhouse::Tasks::Babushka
     include Dollhouse::Tasks::Bootstrap
 
