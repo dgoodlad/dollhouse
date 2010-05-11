@@ -20,6 +20,10 @@ module Dollhouse
         exec "babushka sources -a #{name} #{uri}"
       end
 
+      def update_babushka_sources
+        exec "babushka pull"
+      end
+
       def babushka(dep, args = {})
         unless args.empty?
           stringified_args = args.map_keys(&:to_s).map_values { |v| { 'values' => v } }
