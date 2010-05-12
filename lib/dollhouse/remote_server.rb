@@ -4,6 +4,8 @@ require 'tempfile'
 
 module Dollhouse
   class RemoteServer
+    class FailedRemoteCommand < Exception; end
+
     include Net::SSH::Prompt
 
     include Dollhouse::Tasks::Apt
@@ -69,6 +71,7 @@ module Dollhouse
           ch.wait
 
           if output =~ /\A(.*)(SUCCESS|FAILURE)( \d+)?\r?\n\Z/m
+            raise FailedRemoteCommand, "Status code: #{$3}" if $2 == 'FAILURE'
             result = [$2 == 'SUCCESS', $1, $3.to_i]
           else
             raise "weird #{output.inspect}"
