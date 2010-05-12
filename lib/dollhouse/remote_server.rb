@@ -56,9 +56,12 @@ module Dollhouse
             raise "Failed to start execution!" unless success
 
             ch.on_data do |ch, data|
-              print data
               if data =~ /[Pp]assword.+:/
-                ch.send_data("#{prompt("", false)}\n")
+                ch.send_data("#{prompt(data, false)}\n")
+              elsif data =~ /continue connecting \(yes\/no\)\?/
+                ch.send_data("#{prompt(data, true)}\n")
+              else
+                print data
               end
 
               output << data
