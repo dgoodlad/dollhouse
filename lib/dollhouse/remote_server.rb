@@ -45,7 +45,7 @@ module Dollhouse
 
     def exec_with_pty(command)
       channel = @ssh.open_channel do |ch|
-        ch.request_pty do |ch, success|
+        ch.request_pty(:term => 'xterm-color') do |ch, success|
           raise "Failed to get a PTY!" unless success
 
           output = ''
