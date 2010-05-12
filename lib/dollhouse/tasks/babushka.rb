@@ -30,7 +30,7 @@ module Dollhouse
           vars = { :vars => stringified_args }.to_yaml
           write_file(".babushka/vars") { |f| f << vars }
         end
-        exec "babushka meet '#{dep}' --defaults"
+        exec_with_pty "babushka meet '#{dep}' --defaults"
       end
     end
   end

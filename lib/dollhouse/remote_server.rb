@@ -36,29 +36,48 @@ module Dollhouse
     end
 
     def exec(command)
-      output = ""
+      # For now, we'll always request a pty; this is not necessarily
+      # what we really want, but it'll do.
+      exec_with_pty(command)
+    end
 
-      @ssh.exec!("(#{command}) && echo SUCCESS || echo FAILURE $?") do |ch, stream, data|
-        case stream
-        when :stderr
-          print data
-        when :stdout
-          if data =~ /[Pp]assword.+:/
-            ch.send_data("#{prompt(" ", false)}\n")
-          else
-            output << data
-            print data
+    def exec_with_pty(command)
+      channel = @ssh.open_channel do |ch|
+        ch.request_pty do |ch, success|
+          raise "Failed to get a PTY!" unless success
+
+          output = ''
+
+          puts "Executing:\n#{command}"
+
+          ch.exec("(#{command}) && echo SUCCESS || echo FAILURE $?") do |ch, success|
+            raise "Failed to start execution!" unless success
+
+            ch.on_data do |ch, data|
+              print data
+              if data =~ /[Pp]assword.+:/
+                ch.send_data("#{prompt("", false)}\n")
+              end
+
+              output << data
+            end
+
+            ch.on_extended_data do |ch, data|
+              print data
+            end
           end
+          ch.wait
+
+          if output =~ /\A(.*)(SUCCESS|FAILURE)( \d+)?\r?\n\Z/m
+            result = [$2 == 'SUCCESS', $1, $3.to_i]
+          else
+            raise "weird #{output.inspect}"
+          end
+
+          block_given? ? yield(result) : result
         end
       end
-
-      if output =~ /\A(.*)(SUCCESS|FAILURE)( \d+)?\n\Z/m
-        result = [$2 == 'SUCCESS', $1, $3.to_i]
-      else
-        raise "weird #{output.inspect}"
-      end
-
-      block_given? ? yield(result) : result
+      channel.wait
     end
 
     def get_environment(var)
