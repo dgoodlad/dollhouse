@@ -1,7 +1,7 @@
 module Dollhouse
   module Tasks
     module Apt
-      def set_apt_mirror
+      def set_apt_mirror(mirror, distro)
         write_file "sources.list" do |f|
           # TODO extract this into an erb template or something
           f << <<-EOF
