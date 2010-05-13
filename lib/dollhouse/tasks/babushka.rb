@@ -28,7 +28,8 @@ module Dollhouse
         unless args.empty?
           stringified_args = args.map_keys(&:to_s).map_values { |v| { 'values' => v } }
           vars = { :vars => stringified_args }.to_yaml
-          write_file(".babushka/vars") { |f| f << vars }
+          exec "mkdir -pf ~/.babushka/vars"
+          write_file(".babushka/vars/#{dep}") { |f| f << vars }
         end
         exec_with_pty "babushka meet '#{dep}' --defaults"
       end
