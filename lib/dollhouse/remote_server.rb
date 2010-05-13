@@ -49,10 +49,11 @@ module Dollhouse
           raise "Failed to get a PTY!" unless success
 
           output = ''
+          status_code = nil
 
           puts "Executing:\n#{command}"
 
-          ch.exec("(#{command}) && echo SUCCESS || echo FAILURE $?") do |ch, success|
+          ch.exec(command) do |ch, success|
             raise "Failed to start execution!" unless success
 
             ch.on_data do |ch, data|
@@ -70,16 +71,18 @@ module Dollhouse
             ch.on_extended_data do |ch, data|
               print data
             end
+
+            ch.on_request('exit-status') do |ch, data|
+              status_code = data.read_long
+            end
           end
           ch.wait
 
-          if output =~ /\A(.*)(SUCCESS|FAILURE)( \d+)?\r?\n\Z/m
-            raise FailedRemoteCommand, "Status code: #{$3}" if $2 == 'FAILURE'
-            result = [$2 == 'SUCCESS', $1, $3.to_i]
-          else
-            raise "weird #{output.inspect}"
+          unless status_code.zero?
+            raise FailedRemoteCommand, "Status code: #{status_code}"
           end
 
+          result = [status_code.zero?, output, status_code]
           block_given? ? yield(result) : result
         end
       end
