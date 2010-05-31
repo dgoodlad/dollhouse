@@ -26,6 +26,11 @@ module Dollhouse
 
     def initialize(ssh)
       @ssh = ssh
+      @sudo_user = nil
+    end
+
+    def sudoing?
+      not @sudo_user.nil?
     end
 
     # Write to a remote file at _path_.
@@ -33,14 +38,29 @@ module Dollhouse
       Tempfile.open(File.basename(path)) do |f|
         yield f
         f.flush
-        @ssh.sftp.upload!(f.path, path)
+        if sudoing?
+          tmpfilepath = "/tmp/dollhouse-#{File.basename(f.path)}"
+          # Upload as the 'login' user
+          @ssh.sftp.upload!(f.path, tmpfilepath)
+          # Copy as the 'sudo' user
+          exec "cp \"#{tmpfilepath}\" \"#{f.path}\""
+          # Remove the temporary upload file as the 'login' user
+          exec_with_pty "rm \"#{tmpfilepath}\""
+        else
+          @ssh.sftp.upload!(f.path, path)
+        end
       end
     end
 
+    def as_user(user)
+      @sudo_user = user
+      yield
+      @sudo_user = nil
+    end
+
     def exec(command)
-      # For now, we'll always request a pty; this is not necessarily
-      # what we really want, but it'll do.
-      exec_with_pty(command)
+      command = "sudo sudo -u #{@sudo_user} #{command}" if sudoing?
+      exec_with_pty command
     end
 
     def exec_with_pty(command)
