@@ -29,9 +29,13 @@ module Dollhouse
           stringified_args = args.map_keys(&:to_s).map_values { |v| { 'values' => v } }
           vars = { :vars => stringified_args }.to_yaml
           exec "mkdir -pf ~/.babushka/vars"
-          write_file(".babushka/vars/#{dep}") { |f| f << vars }
+          write_file("~/.babushka/vars/#{dep}") { |f| f << vars }
         end
-        exec_with_pty "babushka meet '#{dep}' --defaults"
+        exec "babushka meet '#{dep}' --defaults"
+      end
+
+      def babushka_as(user, dep, args = {})
+        as_user(user) { babushka dep, args }
       end
     end
   end
