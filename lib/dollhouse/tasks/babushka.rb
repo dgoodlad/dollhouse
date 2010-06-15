@@ -2,7 +2,7 @@ module Dollhouse
   module Tasks
     module Babushka
       # TODO upload a bootstrap script instead of specifying a url
-      DEFAULT_BOOTSTRAP_SCRIPT_URL = "http://j.mp/babushkamehard"
+      DEFAULT_BOOTSTRAP_SCRIPT_URL = "http://babushka.me/up/hard"
 
       # Download and run the babushka bootstrap (requires root access)
       def bootstrap_babushka(script_url = nil)
