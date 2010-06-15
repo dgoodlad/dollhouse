@@ -26,10 +26,13 @@ module Dollhouse
 
       def babushka(dep, args = {})
         unless args.empty?
-          stringified_args = args.map_keys(&:to_s).map_values { |v| { 'values' => v } }
+          stringified_args = {}
+          args.each do |k,v|
+            stringified_args[k.to_s] = {:value => v}
+          end
           vars = { :vars => stringified_args }.to_yaml
-          exec "mkdir -pf ~/.babushka/vars"
-          write_file("~/.babushka/vars/#{dep}") { |f| f << vars }
+          exec "mkdir -p ~/.babushka/vars"
+          write_file(".babushka/vars/#{dep}") { |f| f << vars }
         end
         exec "babushka meet '#{dep}' --defaults"
       end
