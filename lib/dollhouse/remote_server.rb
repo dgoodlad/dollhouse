@@ -11,6 +11,7 @@ module Dollhouse
     include Dollhouse::Tasks::Apt
     include Dollhouse::Tasks::Babushka
     include Dollhouse::Tasks::Bootstrap
+    include Dollhouse::Tasks::Users
 
     attr_reader :ssh
 
